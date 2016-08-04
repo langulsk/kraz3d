@@ -12,19 +12,18 @@ public class CrateResource {
     }
 
     public static String getVertexShaderSource() {
-        final URL url = Resources.getResource(CrateResource.class, "crate_vs.glsl");
-        try {
-            final String source = Resources.toString(url, StandardCharsets.US_ASCII);
-            return source;
-        } catch (final IOException ex) {
-            throw new RuntimeException(ex);
-        }
+        final String fileName = "crate_vs.glsl";
+        return getFileContent(fileName);
     }
 
     public static String getFragmentShaderSource() {
-        final URL url = Resources.getResource(CrateResource.class, "crate_fs.glsl");
+        return getFileContent("crate_fs.glsl");
+    }
+
+    private static String getFileContent(String fileName) {
+        final URL url = Resources.getResource(CrateResource.class, fileName);
         try {
-            final String source = Resources.toString(url, StandardCharsets.US_ASCII);
+            final String source = Resources.toString(url, StandardCharsets.UTF_8);
             return source;
         } catch (final IOException ex) {
             throw new RuntimeException(ex);

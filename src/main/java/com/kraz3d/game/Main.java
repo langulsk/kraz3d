@@ -2,12 +2,15 @@ package com.kraz3d.game;
 
 import com.google.common.io.Closer;
 import com.kraz3d.opengl.*;
+import com.kraz3d.opengl.Error;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.*;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.FloatBuffer;
@@ -18,6 +21,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class Main {
+
+    private static final Logger Log = LoggerFactory.getLogger(Main.class);
 
     public static void main(final String[] args) {
         try (final Closer closer = Closer.create()) {
@@ -49,33 +54,48 @@ public class Main {
                 final IntBuffer heightBuffer = stack.mallocInt(1);
                 final Collection<Crate> crates = createCubes();
                 final FloatBuffer clearColorBuffer = stack.floats(0.5f, 0.5f, 0.5f, 1.0f);
+                final FloatBuffer projectionMatrixBuffer = stack.mallocFloat(16);
+                final FloatBuffer viewMatrixBuffer = stack.mallocFloat(16);
                 while (!GLFW.glfwWindowShouldClose(window)) {
                     GLFW.glfwGetFramebufferSize(window, widthBuffer, heightBuffer);
                     final int width = widthBuffer.get(0);
                     final int height = heightBuffer.get(0);
-                    final FloatBuffer projectionMatrixBuffer = stack.mallocFloat(16);
-//                    final float aspect = ((float) width) / height;
-//                    final Matrix4f projectionMatrix = new Matrix4f().perspective((float) Math.toRadians(45.0f), aspect, 0.01f, 100.0f);
-//                    final Matrix4f viewMatrix = new Matrix4f().lookAt(
-//                            new Vector3f(0, 0, 1),
-//                            new Vector3f(0, 0, 0),
-//                            new Vector3f(0, 1, 0)
-//                    );
-//                    projectionMatrix.get(projectionMatrixBuffer);
+                    final float aspect = ((float) width) / height;
+                    final Matrix4f projectionMatrix = new Matrix4f();
+                    projectionMatrix.identity();
+                    projectionMatrix.perspective((float) Math.toRadians(45.0f), aspect, 0.01f, 100.0f);
+                    final Matrix4f viewMatrix = new Matrix4f();
+                    viewMatrix.identity();
+                    viewMatrix.lookAt(
+                            new Vector3f(0, 0, 2),
+                            new Vector3f(0, 0, 0),
+                            new Vector3f(0, 1, 0)
+                    );
+                    projectionMatrix.get(projectionMatrixBuffer);
+                    viewMatrix.get(viewMatrixBuffer);
                     GL11.glViewport(0, 0, width, height);
                     GL30.glClearBufferfv(GL11.GL_COLOR, 0, clearColorBuffer);
                     for (final Crate crate : crates) {
                         final List<Uniform> uniforms = crate.getProgram().getUniforms();
                         crate.getProgram().use();
-//                        final Uniform projectionMatrixUniform = uniforms.stream()
-//                                .filter(uniform -> "projection_matrix".startsWith(uniform.getName()))
-//                                .findFirst()
-//                                .orElseThrow(RuntimeException::new);
-//                        GL20.glUniformMatrix4fv(projectionMatrixUniform.getLocation(), false, projectionMatrixBuffer);
+                        final Uniform projectionMatrixUniform = uniforms.stream()
+                                .filter(uniform -> "projection_matrix".equals(uniform.getName()))
+                                .findFirst()
+                                .orElseThrow(RuntimeException::new);
+                        final Uniform viewMatrixUniform = uniforms.stream()
+                                .filter(uniform -> "view_matrix".equals(uniform.getName()))
+                                .findFirst()
+                                .orElseThrow(RuntimeException::new);
+                        GL20.glUniformMatrix4fv(projectionMatrixUniform.getLocation(), false, projectionMatrixBuffer);
+                        GL20.glUniformMatrix4fv(viewMatrixUniform.getLocation(), false, viewMatrixBuffer);
                         crate.getVertexArray().bind();
                         GL11.glDrawArrays(GL11.GL_TRIANGLE_FAN, 0, 16);
                         VertexArray.unbind();
                         Program.disuse();
+                    }
+                    ErrorType error;
+                    while ((error = Error.get()) != ErrorType.NO_ERROR) {
+                        Log.error("{}", error);
                     }
                     GLFW.glfwSwapBuffers(window);
                     GLFW.glfwPollEvents();
@@ -101,6 +121,10 @@ public class Main {
         program.attach(vertexShader);
         program.attach(fragmentShader);
         program.link();
+        if (!program.getLinkStatus()) {
+            final String infoLog = program.getInfoLog();
+            Log.error(infoLog);
+        }
         vertexShader.delete();
         fragmentShader.delete();
 
@@ -128,12 +152,12 @@ public class Main {
             GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
 
             final Attribute vertexPosition = attributes.stream()
-                    .filter(attribute -> "vertex_position".startsWith(attribute.getName()))
+                    .filter(attribute -> "vertex_position".equals(attribute.getName()))
                     .findFirst()
                     .orElseThrow(RuntimeException::new);
 
             final Attribute vertexColor = attributes.stream()
-                    .filter(attribute -> "vertex_color".startsWith(attribute.getName()))
+                    .filter(attribute -> "vertex_color".equals(attribute.getName()))
                     .findFirst()
                     .orElseThrow(RuntimeException::new);
 

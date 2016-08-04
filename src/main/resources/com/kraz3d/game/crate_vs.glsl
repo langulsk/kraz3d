@@ -10,6 +10,6 @@ in vec4 vertex_color;
 out vec4 pass_color;
 
 void main() {
-    gl_Position = vertex_position;
+    gl_Position = projection_matrix * view_matrix * vertex_position;
     pass_color = vertex_color;
 }

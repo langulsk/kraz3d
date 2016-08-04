@@ -1,6 +1,7 @@
 package com.kraz3d.opengl;
 
 import com.google.common.base.MoreObjects;
+import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
@@ -48,6 +49,37 @@ public class Program implements Serializable {
         GL20.glUseProgram(0);
     }
 
+    public boolean getDeleteStatus() {
+        return getStatus(GL20.GL_DELETE_STATUS);
+    }
+
+    public boolean getLinkStatus() {
+        return getStatus(GL20.GL_LINK_STATUS);
+    }
+
+    public boolean getValidateStatus() {
+        return getStatus(GL20.GL_VALIDATE_STATUS);
+    }
+
+    private boolean getStatus(final int glStatusType) {
+        try (final MemoryStack stack = MemoryStack.stackPush()) {
+            final IntBuffer statusBuffer = stack.mallocInt(1);
+            GL20.glGetProgramiv(this.glProgram, glStatusType, statusBuffer);
+            return statusBuffer.get(0) != GL11.GL_FALSE;
+        }
+    }
+
+    public String getInfoLog() {
+        try (final MemoryStack memoryStack = MemoryStack.stackPush()) {
+            final IntBuffer lengthBuffer = memoryStack.mallocInt(1);
+            GL20.glGetProgramiv(this.glProgram, GL20.GL_INFO_LOG_LENGTH, lengthBuffer);
+            final ByteBuffer infoLogBuffer = memoryStack.malloc(lengthBuffer.get(0));
+            GL20.glGetProgramInfoLog(this.glProgram, lengthBuffer, infoLogBuffer);
+            return MemoryUtil.memUTF8(infoLogBuffer, lengthBuffer.get(0));
+        }
+
+    }
+
     public List<Attribute> getAttributes() {
         try (final MemoryStack stack = MemoryStack.stackPush()) {
             final IntBuffer activeAttributesBuffer = stack.mallocInt(1);
@@ -61,7 +93,7 @@ public class Program implements Serializable {
             final List<Attribute> attributes = IntStream.range(0, activeAttributesBuffer.get(0))
                     .mapToObj(index -> {
                         GL20.glGetActiveAttrib(this.glProgram, index, lengthBuffer, sizeBuffer, typeBuffer, nameBuffer);
-                        final String name = MemoryUtil.memASCII(nameBuffer, lengthBuffer.get(0));
+                        final String name = MemoryUtil.memUTF8(nameBuffer, lengthBuffer.get(0));
                         final DataType dataType = DataType.getDataType(typeBuffer.get(0));
                         final int size = sizeBuffer.get(0);
                         final int location = GL20.glGetAttribLocation(this.glProgram, nameBuffer);
@@ -77,7 +109,7 @@ public class Program implements Serializable {
             final IntBuffer activeUniformBuffer = stack.mallocInt(1);
             final IntBuffer activeUniformMaxLengthBuffer = stack.mallocInt(1);
             GL20.glGetProgramiv(this.glProgram, GL20.GL_ACTIVE_UNIFORMS, activeUniformBuffer);
-            GL20.glGetProgramiv(this.glProgram, GL20.GL_ACTIVE_ATTRIBUTE_MAX_LENGTH, activeUniformMaxLengthBuffer);
+            GL20.glGetProgramiv(this.glProgram, GL20.GL_ACTIVE_UNIFORM_MAX_LENGTH, activeUniformMaxLengthBuffer);
             final IntBuffer lengthBuffer = stack.mallocInt(1);
             final IntBuffer sizeBuffer = stack.mallocInt(1);
             final IntBuffer typeBuffer = stack.mallocInt(1);
@@ -85,7 +117,7 @@ public class Program implements Serializable {
             final List<Uniform> uniforms = IntStream.range(0, activeUniformBuffer.get(0))
                     .mapToObj(index -> {
                         GL20.glGetActiveUniform(this.glProgram, index, lengthBuffer, sizeBuffer, typeBuffer, nameBuffer);
-                        final String name = MemoryUtil.memASCII(nameBuffer, lengthBuffer.get(0));
+                        final String name = MemoryUtil.memUTF8(nameBuffer, lengthBuffer.get(0));
                         final DataType dataType = DataType.getDataType(typeBuffer.get(0));
                         final int size = sizeBuffer.get(0);
                         final int location = GL20.glGetUniformLocation(this.glProgram, nameBuffer);

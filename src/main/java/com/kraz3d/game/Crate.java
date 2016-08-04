@@ -4,9 +4,10 @@ import com.google.common.base.MoreObjects;
 import com.kraz3d.opengl.Program;
 import com.kraz3d.opengl.VertexArray;
 
+import java.io.Serializable;
 import java.util.Objects;
 
-public class Crate {
+public class Crate implements Serializable {
 
     private final Program program;
 
@@ -14,10 +15,10 @@ public class Crate {
 
     private final int arrayBuffer;
 
-    private Crate(final Program program, final VertexArray vertexArray, final int arrayBuffer) {
-        this.program = program;
-        this.vertexArray = vertexArray;
-        this.arrayBuffer = arrayBuffer;
+    private Crate(final Builder builder) {
+        this.program = builder.program;
+        this.vertexArray = builder.vertexArray;
+        this.arrayBuffer = builder.arrayBuffer;
     }
 
     public Program getProgram() {
@@ -91,7 +92,7 @@ public class Crate {
         }
 
         public Crate build() {
-            return new Crate(this.program, this.vertexArray, this.arrayBuffer);
+            return new Crate(this);
         }
 
     }

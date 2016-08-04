@@ -21,7 +21,7 @@ public enum TargetType implements Serializable {
 //        return this.glShaderType;
 //    }
 //
-//    static TargetType getShaderType(final int glShaderType) {
+//    static TargetType getErrorType(final int glShaderType) {
 //        return EnumSet.allOf(TargetType.class)
 //                .stream()
 //                .filter(shaderType -> shaderType.glShaderType == glShaderType)
