@@ -21,8 +21,8 @@ public class VertexArray implements Serializable {
     }
 
     public static Collection<VertexArray> generate(final int size) {
-        try (final MemoryStack stack = MemoryStack.stackPush()) {
-            final IntBuffer arraysBuffer = stack.mallocInt(size);
+        try (final MemoryStack memoryStack = MemoryStack.stackPush()) {
+            final IntBuffer arraysBuffer = memoryStack.mallocInt(size);
             GL30.glGenVertexArrays(arraysBuffer);
             return IntStream.range(0, size)
                     .map(arraysBuffer::get)
@@ -32,8 +32,8 @@ public class VertexArray implements Serializable {
     }
 
     public static void delete(final Collection<VertexArray> vertexArrays) {
-        try (final MemoryStack stack = MemoryStack.stackPush()) {
-            final IntBuffer arraysBuffer = stack.ints(
+        try (final MemoryStack memoryStack = MemoryStack.stackPush()) {
+            final IntBuffer arraysBuffer = memoryStack.ints(
                     vertexArrays.stream()
                             .mapToInt(VertexArray::getGLArray)
                             .toArray());

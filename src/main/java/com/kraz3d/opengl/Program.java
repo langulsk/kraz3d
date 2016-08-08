@@ -81,15 +81,15 @@ public class Program implements Serializable {
     }
 
     public List<Attribute> getAttributes() {
-        try (final MemoryStack stack = MemoryStack.stackPush()) {
-            final IntBuffer activeAttributesBuffer = stack.mallocInt(1);
-            final IntBuffer activeAttributeMaxLengthBuffer = stack.mallocInt(1);
+        try (final MemoryStack memoryStack = MemoryStack.stackPush()) {
+            final IntBuffer activeAttributesBuffer = memoryStack.mallocInt(1);
+            final IntBuffer activeAttributeMaxLengthBuffer = memoryStack.mallocInt(1);
             GL20.glGetProgramiv(this.glProgram, GL20.GL_ACTIVE_ATTRIBUTES, activeAttributesBuffer);
             GL20.glGetProgramiv(this.glProgram, GL20.GL_ACTIVE_ATTRIBUTE_MAX_LENGTH, activeAttributeMaxLengthBuffer);
-            final IntBuffer lengthBuffer = stack.mallocInt(1);
-            final IntBuffer sizeBuffer = stack.mallocInt(1);
-            final IntBuffer typeBuffer = stack.mallocInt(1);
-            final ByteBuffer nameBuffer = stack.malloc(activeAttributeMaxLengthBuffer.get(0));
+            final IntBuffer lengthBuffer = memoryStack.mallocInt(1);
+            final IntBuffer sizeBuffer = memoryStack.mallocInt(1);
+            final IntBuffer typeBuffer = memoryStack.mallocInt(1);
+            final ByteBuffer nameBuffer = memoryStack.malloc(activeAttributeMaxLengthBuffer.get(0));
             final List<Attribute> attributes = IntStream.range(0, activeAttributesBuffer.get(0))
                     .mapToObj(index -> {
                         GL20.glGetActiveAttrib(this.glProgram, index, lengthBuffer, sizeBuffer, typeBuffer, nameBuffer);
@@ -105,15 +105,15 @@ public class Program implements Serializable {
     }
 
     public List<Uniform> getUniforms() {
-        try (final MemoryStack stack = MemoryStack.stackPush()) {
-            final IntBuffer activeUniformBuffer = stack.mallocInt(1);
-            final IntBuffer activeUniformMaxLengthBuffer = stack.mallocInt(1);
+        try (final MemoryStack memoryStack = MemoryStack.stackPush()) {
+            final IntBuffer activeUniformBuffer = memoryStack.mallocInt(1);
+            final IntBuffer activeUniformMaxLengthBuffer = memoryStack.mallocInt(1);
             GL20.glGetProgramiv(this.glProgram, GL20.GL_ACTIVE_UNIFORMS, activeUniformBuffer);
             GL20.glGetProgramiv(this.glProgram, GL20.GL_ACTIVE_UNIFORM_MAX_LENGTH, activeUniformMaxLengthBuffer);
-            final IntBuffer lengthBuffer = stack.mallocInt(1);
-            final IntBuffer sizeBuffer = stack.mallocInt(1);
-            final IntBuffer typeBuffer = stack.mallocInt(1);
-            final ByteBuffer nameBuffer = stack.malloc(activeUniformMaxLengthBuffer.get(0));
+            final IntBuffer lengthBuffer = memoryStack.mallocInt(1);
+            final IntBuffer sizeBuffer = memoryStack.mallocInt(1);
+            final IntBuffer typeBuffer = memoryStack.mallocInt(1);
+            final ByteBuffer nameBuffer = memoryStack.malloc(activeUniformMaxLengthBuffer.get(0));
             final List<Uniform> uniforms = IntStream.range(0, activeUniformBuffer.get(0))
                     .mapToObj(index -> {
                         GL20.glGetActiveUniform(this.glProgram, index, lengthBuffer, sizeBuffer, typeBuffer, nameBuffer);

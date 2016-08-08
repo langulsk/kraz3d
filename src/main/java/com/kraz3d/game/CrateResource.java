@@ -1,14 +1,87 @@
 package com.kraz3d.game;
 
 import com.google.common.io.Resources;
+import com.kraz3d.engine.Vertex;
+import org.joml.Vector2f;
+import org.joml.Vector4f;
 
 import java.io.IOException;
 import java.net.URL;
+import java.nio.FloatBuffer;
+import java.nio.ShortBuffer;
 import java.nio.charset.StandardCharsets;
+import java.util.stream.IntStream;
 
 public class CrateResource {
 
     private CrateResource() {
+    }
+
+    public static void getVerticesData(final FloatBuffer buffer) {
+        final Vertex[] vertices = getVertices();
+        IntStream.range(0, vertices.length)
+                .forEach(index -> vertices[index].get(index * (4 + 4 + 2), buffer));
+    }
+
+    public static int getVerticesDataSize() {
+        return getVertices().length * (4 + 4 * 2);
+    }
+
+    private static Vertex[] getVertices() {
+        return new Vertex[]{
+
+                new Vertex(new Vector4f(0.5f, -0.5f, 0.5f, 1.0f), new Vector4f(1.0f, 0.0f, 0.0f, 1.0f), new Vector2f(0.0f, 0.0f)),
+                new Vertex(new Vector4f(0.5f, -0.5f, -0.5f, 1.0f), new Vector4f(1.0f, 0.0f, 0.0f, 1.0f), new Vector2f(0.0f, 0.0f)),
+                new Vertex(new Vector4f(0.5f, 0.5f, 0.5f, 1.0f), new Vector4f(1.0f, 0.0f, 0.0f, 1.0f), new Vector2f(0.0f, 0.0f)),
+                new Vertex(new Vector4f(0.5f, 0.5f, -0.5f, 1.0f), new Vector4f(1.0f, 0.0f, 0.0f, 1.0f), new Vector2f(0.0f, 0.0f)),
+
+                new Vertex(new Vector4f(-0.5f, 0.5f, 0.5f, 1.0f), new Vector4f(0.0f, 1.0f, 0.0f, 1.0f), new Vector2f(0.0f, 0.0f)),
+                new Vertex(new Vector4f(0.5f, 0.5f, 0.5f, 1.0f), new Vector4f(0.0f, 1.0f, 0.0f, 1.0f), new Vector2f(0.0f, 0.0f)),
+                new Vertex(new Vector4f(-0.5f, 0.5f, -0.5f, 1.0f), new Vector4f(0.0f, 1.0f, 0.0f, 1.0f), new Vector2f(0.0f, 0.0f)),
+                new Vertex(new Vector4f(0.5f, 0.5f, -0.5f, 1.0f), new Vector4f(0.0f, 1.0f, 0.0f, 1.0f), new Vector2f(0.0f, 0.0f)),
+
+                new Vertex(new Vector4f(-0.5f, -0.5f, 0.5f, 1.0f), new Vector4f(0.0f, 0.0f, 1.0f, 1.0f), new Vector2f(0.0f, 0.0f)),
+                new Vertex(new Vector4f(0.5f, -0.5f, 0.5f, 1.0f), new Vector4f(0.0f, 0.0f, 1.0f, 1.0f), new Vector2f(0.0f, 0.0f)),
+                new Vertex(new Vector4f(-0.5f, 0.5f, 0.5f, 1.0f), new Vector4f(0.0f, 0.0f, 1.0f, 1.0f), new Vector2f(0.0f, 0.0f)),
+                new Vertex(new Vector4f(0.5f, 0.5f, 0.5f, 1.0f), new Vector4f(0.0f, 0.0f, 1.0f, 1.0f), new Vector2f(0.0f, 0.0f)),
+
+                new Vertex(new Vector4f(-0.5f, 0.5f, -0.5f, 1.0f), new Vector4f(0.0f, 1.0f, 1.0f, 1.0f), new Vector2f(0.0f, 0.0f)),
+                new Vertex(new Vector4f(-0.5f, -0.5f, -0.5f, 1.0f), new Vector4f(0.0f, 1.0f, 1.0f, 1.0f), new Vector2f(0.0f, 0.0f)),
+                new Vertex(new Vector4f(-0.5f, 0.5f, 0.5f, 1.0f), new Vector4f(0.0f, 1.0f, 1.0f, 1.0f), new Vector2f(0.0f, 0.0f)),
+                new Vertex(new Vector4f(-0.5f, -0.5f, 0.5f, 1.0f), new Vector4f(0.0f, 1.0f, 1.0f, 1.0f), new Vector2f(0.0f, 0.0f)),
+
+                new Vertex(new Vector4f(0.5f, -0.5f, -0.5f, 1.0f), new Vector4f(1.0f, 0.0f, 1.0f, 1.0f), new Vector2f(0.0f, 0.0f)),
+                new Vertex(new Vector4f(0.5f, -0.5f, 0.5f, 1.0f), new Vector4f(1.0f, 0.0f, 1.0f, 1.0f), new Vector2f(0.0f, 0.0f)),
+                new Vertex(new Vector4f(-0.5f, -0.5f, -0.5f, 1.0f), new Vector4f(1.0f, 0.0f, 1.0f, 1.0f), new Vector2f(0.0f, 0.0f)),
+                new Vertex(new Vector4f(-0.5f, -0.5f, 0.5f, 1.0f), new Vector4f(1.0f, 0.0f, 1.0f, 1.0f), new Vector2f(0.0f, 0.0f)),
+
+                new Vertex(new Vector4f(0.5f, 0.5f, -0.5f, 1.0f), new Vector4f(1.0f, 1.0f, 0.0f, 1.0f), new Vector2f(0.0f, 0.0f)),
+                new Vertex(new Vector4f(0.5f, -0.5f, -0.5f, 1.0f), new Vector4f(1.0f, 1.0f, 0.0f, 1.0f), new Vector2f(0.0f, 0.0f)),
+                new Vertex(new Vector4f(-0.5f, 0.5f, -0.5f, 1.0f), new Vector4f(1.0f, 1.0f, 0.0f, 1.0f), new Vector2f(0.0f, 0.0f)),
+                new Vertex(new Vector4f(-0.5f, -0.5f, -0.5f, 1.0f), new Vector4f(1.0f, 1.0f, 0.0f, 1.0f), new Vector2f(0.0f, 0.0f)),
+
+        };
+    }
+
+    public static void getIndicesData(final ShortBuffer buffer) {
+        final short[] indices = getIndices();
+        IntStream.range(0, indices.length)
+                .forEach(index -> buffer.put(index, indices[index]));
+    }
+
+    public static int getIndicesDataSize() {
+        return getIndices().length;
+    }
+
+    private static short[] getIndices() {
+        return new short[]{
+                0, 1, 2, 3, -1, -1,
+                4, 5, 6, 7, -1, -1,
+                8, 9, 10, 11, -1, -1,
+                12, 13, 14, 15, -1, -1,
+                16, 17, 18, 19, -1, -1,
+                20, 21, 22, 23, -1, -1,
+        };
     }
 
     public static String getVertexShaderSource() {

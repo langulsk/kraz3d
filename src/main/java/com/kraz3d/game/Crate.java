@@ -15,10 +15,13 @@ public class Crate implements Serializable {
 
     private final int arrayBuffer;
 
+    private final int elementArrayBuffer;
+
     private Crate(final Builder builder) {
         this.program = builder.program;
         this.vertexArray = builder.vertexArray;
         this.arrayBuffer = builder.arrayBuffer;
+        this.elementArrayBuffer = builder.elementArrayBuffer;
     }
 
     public Program getProgram() {
@@ -31,6 +34,10 @@ public class Crate implements Serializable {
 
     public int getArrayBuffer() {
         return this.arrayBuffer;
+    }
+
+    public int getElementArrayBuffer() {
+        return this.elementArrayBuffer;
     }
 
     @Override
@@ -47,7 +54,8 @@ public class Crate implements Serializable {
         final Crate other = (Crate) object;
         return Objects.equals(this.program, other.program)
                 && Objects.equals(this.vertexArray, other.vertexArray)
-                && this.arrayBuffer == other.arrayBuffer;
+                && this.arrayBuffer == other.arrayBuffer
+                && this.elementArrayBuffer == other.elementArrayBuffer;
     }
 
     @Override
@@ -55,7 +63,8 @@ public class Crate implements Serializable {
         return Objects.hash(
                 this.program,
                 this.vertexArray,
-                this.arrayBuffer
+                this.arrayBuffer,
+                this.elementArrayBuffer
         );
     }
 
@@ -65,6 +74,7 @@ public class Crate implements Serializable {
                 .add("program", this.program)
                 .add("vertexArray", this.vertexArray)
                 .add("arrayBuffer", this.arrayBuffer)
+                .add("elementArrayBuffer", this.elementArrayBuffer)
                 .toString();
     }
 
@@ -75,6 +85,8 @@ public class Crate implements Serializable {
         private VertexArray vertexArray;
 
         private int arrayBuffer;
+
+        private int elementArrayBuffer;
 
         public Builder setProgram(final Program program) {
             this.program = program;
@@ -88,6 +100,11 @@ public class Crate implements Serializable {
 
         public Builder setArrayBuffer(final int arrayBuffer) {
             this.arrayBuffer = arrayBuffer;
+            return this;
+        }
+
+        public Builder setElementArrayBuffer(final int elementArrayBuffer) {
+            this.elementArrayBuffer = elementArrayBuffer;
             return this;
         }
 
