@@ -8,7 +8,7 @@ import org.joml.Vector4f;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.FloatBuffer;
-import java.nio.ShortBuffer;
+import java.nio.IntBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.stream.IntStream;
 
@@ -63,8 +63,8 @@ public class CrateResource {
         };
     }
 
-    public static void getIndicesData(final ShortBuffer buffer) {
-        final short[] indices = getIndices();
+    public static void getIndicesData(final IntBuffer buffer) {
+        final int[] indices = getIndices();
         IntStream.range(0, indices.length)
                 .forEach(index -> buffer.put(index, indices[index]));
     }
@@ -73,14 +73,14 @@ public class CrateResource {
         return getIndices().length;
     }
 
-    private static short[] getIndices() {
-        return new short[]{
-                0, 1, 2, 3, -1, -1,
-                4, 5, 6, 7, -1, -1,
-                8, 9, 10, 11, -1, -1,
-                12, 13, 14, 15, -1, -1,
-                16, 17, 18, 19, -1, -1,
-                20, 21, 22, 23, -1, -1,
+    private static int[] getIndices() {
+        return new int[]{
+                0, 1, 2, 3,
+                4, 5, 6, 7,
+                8, 9, 10, 11,
+                12, 13, 14, 15,
+                16, 17, 18, 19,
+                20, 21, 22, 23,
         };
     }
 

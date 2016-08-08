@@ -7,6 +7,8 @@ import com.kraz3d.opengl.*;
 import com.kraz3d.opengl.Error;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
+import org.lwjgl.BufferUtils;
+import org.lwjgl.PointerBuffer;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.*;
 import org.lwjgl.system.Configuration;
@@ -18,13 +20,13 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
-import java.nio.ShortBuffer;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class Main {
 
@@ -50,7 +52,7 @@ public class Main {
             GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_PROFILE, GLFW.GLFW_OPENGL_CORE_PROFILE);
             GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_FORWARD_COMPAT, GLFW.GLFW_TRUE);
             GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_DEBUG_CONTEXT, GLFW.GLFW_TRUE);
-            final long window = GLFW.glfwCreateWindow(800, 600, "Game", MemoryUtil.NULL, MemoryUtil.NULL);
+            final long window = GLFW.glfwCreateWindow(320, 240, "Game", MemoryUtil.NULL, MemoryUtil.NULL);
             if (window == MemoryUtil.NULL) {
                 throw new RuntimeException();
             }
@@ -75,8 +77,6 @@ public class Main {
                 GL11.glEnable(GL11.GL_CULL_FACE);
                 GL11.glCullFace(GL11.GL_BACK);
                 GL11.glFrontFace(GL11.GL_CCW);
-                GL11.glEnable(GL31.GL_PRIMITIVE_RESTART);
-                GL31.glPrimitiveRestartIndex(-1);
                 while (!GLFW.glfwWindowShouldClose(window)) {
                     GLFW.glfwGetFramebufferSize(window, widthBuffer, heightBuffer);
                     final int width = widthBuffer.get(0);
@@ -114,7 +114,16 @@ public class Main {
                         GL20.glUniformMatrix4fv(projectionMatrixUniform.getLocation(), false, projectionMatrixBuffer);
                         GL20.glUniformMatrix4fv(viewMatrixUniform.getLocation(), false, viewMatrixBuffer);
                         crate.getVertexArray().bind();
-                        GL11.glDrawElements(GL11.GL_TRIANGLE_STRIP, CrateResource.getIndicesDataSize(), GL11.GL_UNSIGNED_SHORT, 0);
+                        final IntBuffer countBuffer = BufferUtils.createIntBuffer(6);
+                        IntStream.range(0, 6)
+                                .forEach(index -> countBuffer.put(index, 4));
+                        final PointerBuffer indicesBuffer = BufferUtils.createPointerBuffer(6);
+                        IntStream.range(0, 6)
+                                .forEach(index -> indicesBuffer.put(index, index * 4 * Integer.BYTES));
+                        final IntBuffer baseVertexBuffer = BufferUtils.createIntBuffer(6);
+                        IntStream.range(0, 6)
+                                .forEach(index -> baseVertexBuffer.put(index, 0));
+                        GL32.glMultiDrawElementsBaseVertex(GL11.GL_TRIANGLE_STRIP, countBuffer, GL11.GL_UNSIGNED_INT, indicesBuffer, baseVertexBuffer);
                         VertexArray.unbind();
                         Program.disuse();
                     }
@@ -154,7 +163,6 @@ public class Main {
         fragmentShader.delete();
 
         final List<Attribute> attributes = program.getAttributes();
-//        final List<Uniform> uniforms = program.getUniforms();
 
         try (final MemoryStack memoryStack = MemoryStack.stackPush()) {
 
@@ -173,7 +181,7 @@ public class Main {
             GL15.glBufferData(GL15.GL_ARRAY_BUFFER, verticesBuffer, GL15.GL_STATIC_DRAW);
             GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
 
-            final ShortBuffer indicesBuffer = memoryStack.mallocShort(CrateResource.getIndicesDataSize());
+            final IntBuffer indicesBuffer = memoryStack.mallocInt(CrateResource.getIndicesDataSize());
             CrateResource.getIndicesData(indicesBuffer);
 
             GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, vboBuffer.get(1));
