@@ -12,6 +12,7 @@ import java.nio.IntBuffer;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -125,6 +126,17 @@ public class Program implements Serializable {
                     })
                     .collect(Collectors.toList());
             return Collections.unmodifiableList(uniforms);
+        }
+    }
+
+    public static Optional<Program> get() {
+        try (final MemoryStack memoryStack = MemoryStack.stackPush()) {
+            final IntBuffer buffer = memoryStack.mallocInt(1);
+            GL11.glGetIntegerv(GL20.GL_CURRENT_PROGRAM, buffer);
+            final int glProgram = buffer.get(0);
+            return Optional.of(glProgram)
+                    .filter(program -> program != 0)
+                    .map(Program::new);
         }
     }
 
