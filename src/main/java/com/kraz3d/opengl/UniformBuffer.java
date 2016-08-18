@@ -1,9 +1,15 @@
 package com.kraz3d.opengl;
 
+import org.lwjgl.opengl.GL15;
+
 public class UniformBuffer extends Buffer {
 
-    public UniformBuffer() {
-        super(TargetType.UNIFORM_BUFFER);
+    private UniformBuffer(final int glBuffer) {
+        super(TargetType.UNIFORM_BUFFER, glBuffer);
+    }
+
+    public static void unbind() {
+        GL15.glBindBuffer(TargetType.UNIFORM_BUFFER.getGLTargetType(), 0);
     }
 
 }

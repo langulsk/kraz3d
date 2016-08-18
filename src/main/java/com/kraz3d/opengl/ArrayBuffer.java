@@ -1,9 +1,15 @@
 package com.kraz3d.opengl;
 
+import org.lwjgl.opengl.GL15;
+
 public class ArrayBuffer extends Buffer {
 
-    public ArrayBuffer() {
-        super(TargetType.ARRAY_BUFFER);
+    private ArrayBuffer(final int glBuffer) {
+        super(TargetType.ARRAY_BUFFER, glBuffer);
+    }
+
+    public static void unbind() {
+        GL15.glBindBuffer(TargetType.ARRAY_BUFFER.getGLTargetType(), 0);
     }
 
 }
