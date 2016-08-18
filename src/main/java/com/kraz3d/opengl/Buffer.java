@@ -1,18 +1,34 @@
 package com.kraz3d.opengl;
 
 import org.lwjgl.opengl.GL15;
+import org.lwjgl.system.MemoryStack;
 
 import java.io.Serializable;
 import java.nio.*;
+import java.util.Collection;
 
 public abstract class Buffer implements Serializable {
 
-    private final TargetType targetType;
-    private final int glBuffer;
+    protected final TargetType targetType;
+    protected final int glBuffer;
 
     protected Buffer(final TargetType targetType, final int glBuffer) {
         this.targetType = targetType;
         this.glBuffer = glBuffer;
+    }
+
+    public static void delete(final Collection<? extends Buffer> buffers) {
+        try (final MemoryStack memoryStack = MemoryStack.stackPush()) {
+            final IntBuffer bufferBuffer = memoryStack.ints(
+                    buffers.stream()
+                            .mapToInt(Buffer::getGLBuffer)
+                            .toArray());
+            GL15.glDeleteBuffers(bufferBuffer);
+        }
+    }
+
+    int getGLBuffer() {
+        return this.glBuffer;
     }
 
     public void bind() {
@@ -20,44 +36,28 @@ public abstract class Buffer implements Serializable {
         GL15.glBindBuffer(glTargetType, this.glBuffer);
     }
 
-    public void data(final long size, final int usage) {
-        GL15.glBufferData(this.targetType.getGLTargetType(), size, usage);
+    public void data(final long size, final UsageType usageType) {
+        GL15.glBufferData(this.targetType.getGLTargetType(), size, usageType.getGLUsageType());
     }
 
-    public void data(final ByteBuffer data, final int usage) {
-        GL15.glBufferData(this.targetType.getGLTargetType(), data, usage);
+    public void data(final ByteBuffer data, final UsageType usageType) {
+        GL15.glBufferData(this.targetType.getGLTargetType(), data, usageType.getGLUsageType());
     }
 
-    public void data(final ShortBuffer data, final int usage) {
-        GL15.glBufferData(this.targetType.getGLTargetType(), data, usage);
+    public void data(final ShortBuffer data, final UsageType usageType) {
+        GL15.glBufferData(this.targetType.getGLTargetType(), data, usageType.getGLUsageType());
     }
 
-    public void data(final IntBuffer data, final int usage) {
-        GL15.glBufferData(this.targetType.getGLTargetType(), data, usage);
+    public void data(final IntBuffer data, final UsageType usageType) {
+        GL15.glBufferData(this.targetType.getGLTargetType(), data, usageType.getGLUsageType());
     }
 
-    public void data(final FloatBuffer data, final int usage) {
-        GL15.glBufferData(this.targetType.getGLTargetType(), data, usage);
+    public void data(final FloatBuffer data, final UsageType usageType) {
+        GL15.glBufferData(this.targetType.getGLTargetType(), data, usageType.getGLUsageType());
     }
 
-    public void data(final DoubleBuffer data, final int usage) {
-        GL15.glBufferData(this.targetType.getGLTargetType(), data, usage);
-    }
-
-    public void data(final short[] data, final int usage) {
-        GL15.glBufferData(this.targetType.getGLTargetType(), data, usage);
-    }
-
-    public void data(final int[] data, final int usage) {
-        GL15.glBufferData(this.targetType.getGLTargetType(), data, usage);
-    }
-
-    public void data(final float[] data, final int usage) {
-        GL15.glBufferData(this.targetType.getGLTargetType(), data, usage);
-    }
-
-    public void data(final double[] data, final int usage) {
-        GL15.glBufferData(this.targetType.getGLTargetType(), data, usage);
+    public void data(final DoubleBuffer data, final UsageType usageType) {
+        GL15.glBufferData(this.targetType.getGLTargetType(), data, usageType.getGLUsageType());
     }
 
 }
