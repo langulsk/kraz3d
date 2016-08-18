@@ -164,29 +164,34 @@ public class Main {
 
         final List<Attribute> attributes = program.getAttributes();
 
+        final ArrayBuffer arrayBuffer = ArrayBuffer.generate(1)
+                .stream()
+                .findFirst()
+                .orElseThrow(RuntimeException::new);
+        final ElementArrayBuffer elementArrayBuffer = ElementArrayBuffer.generate(1)
+                .stream()
+                .findFirst()
+                .orElseThrow(RuntimeException::new);
+        final VertexArray vertexArray = VertexArray.generate(1)
+                .stream()
+                .findFirst()
+                .orElseThrow(RuntimeException::new);
+
         try (final MemoryStack memoryStack = MemoryStack.stackPush()) {
-
-            final IntBuffer vboBuffer = memoryStack.mallocInt(2);
-            final VertexArray vertexArray = VertexArray.generate(1)
-                    .stream()
-                    .findFirst()
-                    .orElseThrow(RuntimeException::new);
-
-            GL15.glGenBuffers(vboBuffer);
 
             final FloatBuffer verticesBuffer = memoryStack.mallocFloat(CrateResource.getVerticesDataSize());
             CrateResource.getVerticesData(verticesBuffer);
 
-            GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vboBuffer.get(0));
-            GL15.glBufferData(GL15.GL_ARRAY_BUFFER, verticesBuffer, GL15.GL_STATIC_DRAW);
-            GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
+            arrayBuffer.bind();
+            arrayBuffer.data(verticesBuffer, UsageType.STATIC_DRAW);
+            ArrayBuffer.unbind();
 
             final IntBuffer indicesBuffer = memoryStack.mallocInt(CrateResource.getIndicesDataSize());
             CrateResource.getIndicesData(indicesBuffer);
 
-            GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, vboBuffer.get(1));
-            GL15.glBufferData(GL15.GL_ELEMENT_ARRAY_BUFFER, indicesBuffer, GL15.GL_STATIC_DRAW);
-            GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, 0);
+            elementArrayBuffer.bind();
+            elementArrayBuffer.data(indicesBuffer, UsageType.STATIC_DRAW);
+            ElementArrayBuffer.unbind();
 
             final Attribute vertexPosition = attributes.stream()
                     .filter(attribute -> "vertex_position".equals(attribute.getName()))
@@ -199,8 +204,8 @@ public class Main {
                     .orElseThrow(RuntimeException::new);
 
             vertexArray.bind();
-            GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vboBuffer.get(0));
-            GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, vboBuffer.get(1));
+            arrayBuffer.bind();
+            elementArrayBuffer.bind();
 
             GL20.glEnableVertexAttribArray(vertexPosition.getLocation());
             GL20.glVertexAttribPointer(vertexPosition.getLocation(), 4, GL11.GL_FLOAT, false, Vertex.getStride(), Vertex.getPositionPointer());
@@ -213,8 +218,8 @@ public class Main {
             return Collections.unmodifiableCollection(Collections.singletonList(new Crate.Builder()
                     .setProgram(program)
                     .setVertexArray(vertexArray)
-                    .setArrayBuffer(vboBuffer.get(0))
-                    .setElementArrayBuffer(vboBuffer.get(1))
+                    .setArrayBuffer(arrayBuffer)
+                    .setElementArrayBuffer(elementArrayBuffer)
                     .build()));
 
         }
@@ -229,17 +234,11 @@ public class Main {
                 .distinct()
                 .collect(Collectors.toList());
         VertexArray.delete(vertexArrays);
-        try (final MemoryStack stack = MemoryStack.stackPush()) {
-            final IntBuffer vboBuffer = stack.ints(
-                    crates.stream()
-                            .map(crate -> new int[]{
-                                    crate.getArrayBuffer(),
-                                    crate.getElementArrayBuffer()})
-                            .flatMapToInt(Arrays::stream)
-                            .distinct()
-                            .toArray());
-            GL15.glDeleteBuffers(vboBuffer);
-        }
+        final List<Buffer> buffers = crates.stream()
+                .map(crate -> Arrays.asList(crate.getArrayBuffer(), crate.getElementArrayBuffer()))
+                .flatMap(Collection::stream)
+                .collect(Collectors.toList());
+        Buffer.delete(buffers);
     }
 
 }

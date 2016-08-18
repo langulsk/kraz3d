@@ -1,6 +1,8 @@
 package com.kraz3d.game;
 
 import com.google.common.base.MoreObjects;
+import com.kraz3d.opengl.ArrayBuffer;
+import com.kraz3d.opengl.ElementArrayBuffer;
 import com.kraz3d.opengl.Program;
 import com.kraz3d.opengl.VertexArray;
 
@@ -13,9 +15,9 @@ public class Crate implements Serializable {
 
     private final VertexArray vertexArray;
 
-    private final int arrayBuffer;
+    private final ArrayBuffer arrayBuffer;
 
-    private final int elementArrayBuffer;
+    private final ElementArrayBuffer elementArrayBuffer;
 
     private Crate(final Builder builder) {
         this.program = builder.program;
@@ -32,11 +34,11 @@ public class Crate implements Serializable {
         return this.vertexArray;
     }
 
-    public int getArrayBuffer() {
+    public ArrayBuffer getArrayBuffer() {
         return this.arrayBuffer;
     }
 
-    public int getElementArrayBuffer() {
+    public ElementArrayBuffer getElementArrayBuffer() {
         return this.elementArrayBuffer;
     }
 
@@ -84,9 +86,9 @@ public class Crate implements Serializable {
 
         private VertexArray vertexArray;
 
-        private int arrayBuffer;
+        private ArrayBuffer arrayBuffer;
 
-        private int elementArrayBuffer;
+        private ElementArrayBuffer elementArrayBuffer;
 
         public Builder setProgram(final Program program) {
             this.program = program;
@@ -98,12 +100,12 @@ public class Crate implements Serializable {
             return this;
         }
 
-        public Builder setArrayBuffer(final int arrayBuffer) {
+        public Builder setArrayBuffer(final ArrayBuffer arrayBuffer) {
             this.arrayBuffer = arrayBuffer;
             return this;
         }
 
-        public Builder setElementArrayBuffer(final int elementArrayBuffer) {
+        public Builder setElementArrayBuffer(final ElementArrayBuffer elementArrayBuffer) {
             this.elementArrayBuffer = elementArrayBuffer;
             return this;
         }
