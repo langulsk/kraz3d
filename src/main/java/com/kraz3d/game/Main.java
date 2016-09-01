@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 public class Main {
 
@@ -100,9 +101,14 @@ public class Main {
                     GL11.glViewport(0, 0, width, height);
                     GL30.glClearBufferfv(GL11.GL_COLOR, 0, clearColorBuffer);
                     GL30.glClearBufferfv(GL11.GL_DEPTH, 0, clearDepthBuffer);
-                    for (final Crate crate : crates) {
-                        final List<Uniform> uniforms = crate.getProgram().getUniforms();
-                        crate.getProgram().use();
+                    final Collection<DrawCommand> drawCommands = crates.stream()
+                            .map(Crate::getDrawCommands)
+                            .flatMap(Collection::stream)
+                            .distinct()
+                            .collect(Collectors.toList());
+                    for (final DrawCommand drawCommand : drawCommands) {
+                        final List<Uniform> uniforms = drawCommand.getProgram().getUniforms();
+                        drawCommand.getProgram().use();
                         final Uniform projectionMatrixUniform = uniforms.stream()
                                 .filter(uniform -> "projection_matrix".equals(uniform.getName()))
                                 .findFirst()
@@ -113,7 +119,7 @@ public class Main {
                                 .orElseThrow(RuntimeException::new);
                         GL20.glUniformMatrix4fv(projectionMatrixUniform.getLocation(), false, projectionMatrixBuffer);
                         GL20.glUniformMatrix4fv(viewMatrixUniform.getLocation(), false, viewMatrixBuffer);
-                        crate.getVertexArray().bind();
+                        drawCommand.getVertexArray().bind();
                         final IntBuffer countBuffer = BufferUtils.createIntBuffer(6);
                         IntStream.range(0, 6)
                                 .forEach(index -> countBuffer.put(index, 4));
@@ -216,8 +222,44 @@ public class Main {
             VertexArray.unbind();
 
             return Collections.unmodifiableCollection(Collections.singletonList(new Crate.Builder()
-                    .setProgram(program)
-                    .setVertexArray(vertexArray)
+                    .setDrawCommands(Stream.of(
+                            new DrawCommand.Builder()
+                                    .setProgram(program)
+                                    .setVertexArray(vertexArray)
+                                    .setPrimitiveType(PrimitiveType.TRIANGLE_STRIP)
+                                    .setCount(4)
+                                    .build(),
+                            new DrawCommand.Builder()
+                                    .setProgram(program)
+                                    .setVertexArray(vertexArray)
+                                    .setPrimitiveType(PrimitiveType.TRIANGLE_STRIP)
+                                    .setCount(4)
+                                    .build(),
+                            new DrawCommand.Builder()
+                                    .setProgram(program)
+                                    .setVertexArray(vertexArray)
+                                    .setPrimitiveType(PrimitiveType.TRIANGLE_STRIP)
+                                    .setCount(4)
+                                    .build(),
+                            new DrawCommand.Builder()
+                                    .setProgram(program)
+                                    .setVertexArray(vertexArray)
+                                    .setPrimitiveType(PrimitiveType.TRIANGLE_STRIP)
+                                    .setCount(4)
+                                    .build(),
+                            new DrawCommand.Builder()
+                                    .setProgram(program)
+                                    .setVertexArray(vertexArray)
+                                    .setPrimitiveType(PrimitiveType.TRIANGLE_STRIP)
+                                    .setCount(4)
+                                    .build(),
+                            new DrawCommand.Builder()
+                                    .setProgram(program)
+                                    .setVertexArray(vertexArray)
+                                    .setPrimitiveType(PrimitiveType.TRIANGLE_STRIP)
+                                    .setCount(4)
+                                    .build())
+                            .collect(Collectors.toList()))
                     .setArrayBuffer(arrayBuffer)
                     .setElementArrayBuffer(elementArrayBuffer)
                     .build()));
@@ -227,10 +269,15 @@ public class Main {
 
     private static void deleteCubes(final Collection<Crate> crates) {
         crates.stream()
-                .map(Crate::getProgram)
+                .map(Crate::getDrawCommands)
+                .flatMap(Collection::stream)
+                .map(DrawCommand::getProgram)
+                .distinct()
                 .forEach(Program::delete);
         final List<VertexArray> vertexArrays = crates.stream()
-                .map(Crate::getVertexArray)
+                .map(Crate::getDrawCommands)
+                .flatMap(Collection::stream)
+                .map(DrawCommand::getVertexArray)
                 .distinct()
                 .collect(Collectors.toList());
         VertexArray.delete(vertexArrays);
