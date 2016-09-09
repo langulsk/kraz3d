@@ -7,7 +7,6 @@ import com.kraz3d.opengl.*;
 import com.kraz3d.opengl.Error;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
-import org.lwjgl.BufferUtils;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.*;
@@ -26,8 +25,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
+import java.util.stream.LongStream;
 
 public class Main {
 
@@ -101,38 +99,13 @@ public class Main {
                     GL11.glViewport(0, 0, width, height);
                     GL30.glClearBufferfv(GL11.GL_COLOR, 0, clearColorBuffer);
                     GL30.glClearBufferfv(GL11.GL_DEPTH, 0, clearDepthBuffer);
-                    final Collection<DrawCommand> drawCommands = crates.stream()
-                            .map(Crate::getDrawCommands)
+                    crates.stream()
+                            .map(Crate::getDrawElementsCommand)
                             .flatMap(Collection::stream)
-                            .distinct()
-                            .collect(Collectors.toList());
-                    for (final DrawCommand drawCommand : drawCommands) {
-                        final List<Uniform> uniforms = drawCommand.getProgram().getUniforms();
-                        drawCommand.getProgram().use();
-                        final Uniform projectionMatrixUniform = uniforms.stream()
-                                .filter(uniform -> "projection_matrix".equals(uniform.getName()))
-                                .findFirst()
-                                .orElseThrow(RuntimeException::new);
-                        final Uniform viewMatrixUniform = uniforms.stream()
-                                .filter(uniform -> "view_matrix".equals(uniform.getName()))
-                                .findFirst()
-                                .orElseThrow(RuntimeException::new);
-                        GL20.glUniformMatrix4fv(projectionMatrixUniform.getLocation(), false, projectionMatrixBuffer);
-                        GL20.glUniformMatrix4fv(viewMatrixUniform.getLocation(), false, viewMatrixBuffer);
-                        drawCommand.getVertexArray().bind();
-                        final IntBuffer countBuffer = BufferUtils.createIntBuffer(6);
-                        IntStream.range(0, 6)
-                                .forEach(index -> countBuffer.put(index, 4));
-                        final PointerBuffer indicesBuffer = BufferUtils.createPointerBuffer(6);
-                        IntStream.range(0, 6)
-                                .forEach(index -> indicesBuffer.put(index, index * 4 * Integer.BYTES));
-                        final IntBuffer baseVertexBuffer = BufferUtils.createIntBuffer(6);
-                        IntStream.range(0, 6)
-                                .forEach(index -> baseVertexBuffer.put(index, 0));
-                        GL32.glMultiDrawElementsBaseVertex(GL11.GL_TRIANGLE_STRIP, countBuffer, GL11.GL_UNSIGNED_INT, indicesBuffer, baseVertexBuffer);
-                        VertexArray.unbind();
-                        Program.disuse();
-                    }
+                            .collect(Collectors.groupingBy(DrawElementsCommand::getProgram))
+                            .forEach((program, commands) -> useProgramAndExecuteCommands(program, commands, projectionMatrixBuffer, viewMatrixBuffer));
+                    VertexArray.unbind();
+                    Program.disuse();
                     ErrorType error;
                     while ((error = Error.get()) != ErrorType.NO_ERROR) {
                         Log.error("{}", error);
@@ -145,6 +118,41 @@ public class Main {
         } catch (final IOException ex) {
             throw new RuntimeException(ex);
         }
+    }
+
+    private static void useProgramAndExecuteCommands(final Program program, final Collection<DrawElementsCommand> commands, final FloatBuffer projectionMatrixBuffer, final FloatBuffer viewMatrixBuffer) {
+        program.use();
+        final Collection<Uniform> uniforms = program.getUniforms();
+        final Uniform projectionMatrixUniform = uniforms.stream()
+                .filter(uniform -> "projection_matrix".equals(uniform.getName()))
+                .findFirst()
+                .orElseThrow(RuntimeException::new);
+        final Uniform viewMatrixUniform = uniforms.stream()
+                .filter(uniform -> "view_matrix".equals(uniform.getName()))
+                .findFirst()
+                .orElseThrow(RuntimeException::new);
+        GL20.glUniformMatrix4fv(projectionMatrixUniform.getLocation(), false, projectionMatrixBuffer);
+        GL20.glUniformMatrix4fv(viewMatrixUniform.getLocation(), false, viewMatrixBuffer);
+        commands.stream()
+                .collect(Collectors.groupingBy(DrawElementsCommand::getVertexArray))
+                .forEach(Main::bindVertexArrayAndExecuteCommands);
+    }
+
+    private static void bindVertexArrayAndExecuteCommands(final VertexArray vertexArray, final Collection<DrawElementsCommand> commands) {
+        vertexArray.bind();
+        commands.stream()
+                .collect(Collectors.groupingBy(DrawElementsCommand::getPrimitiveType))
+                .forEach(Main::executeCommands);
+    }
+
+    private static void executeCommands(final PrimitiveType primitiveType, final Collection<DrawElementsCommand> commands) {
+        final int mode = primitiveType.getGLPrimitiveType();
+        try (final MemoryStack memoryStack = MemoryStack.stackPush()) {
+            final IntBuffer countBuffer = memoryStack.ints(commands.stream().mapToInt(DrawElementsCommand::getCount).toArray());
+            final PointerBuffer indicesBuffer = memoryStack.pointers(commands.stream().mapToLong(DrawElementsCommand::getByteOffset).toArray());
+            GL14.glMultiDrawElements(mode, countBuffer, GL11.GL_UNSIGNED_INT, indicesBuffer);
+        }
+
     }
 
     private static Collection<Crate> createCubes() {
@@ -221,45 +229,19 @@ public class Main {
 
             VertexArray.unbind();
 
+            final Collection<DrawElementsCommand> drawElementsCommands = LongStream.iterate(0, byteOffset -> byteOffset + 4 * Integer.BYTES)
+                    .limit(6)
+                    .mapToObj(byteOffset -> new DrawElementsCommand.Builder()
+                            .setProgram(program)
+                            .setVertexArray(vertexArray)
+                            .setPrimitiveType(PrimitiveType.TRIANGLE_STRIP)
+                            .setCount(4)
+                            .setByteOffset(byteOffset)
+                            .build())
+                    .collect(Collectors.toList());
+
             return Collections.unmodifiableCollection(Collections.singletonList(new Crate.Builder()
-                    .setDrawCommands(Stream.of(
-                            new DrawCommand.Builder()
-                                    .setProgram(program)
-                                    .setVertexArray(vertexArray)
-                                    .setPrimitiveType(PrimitiveType.TRIANGLE_STRIP)
-                                    .setCount(4)
-                                    .build(),
-                            new DrawCommand.Builder()
-                                    .setProgram(program)
-                                    .setVertexArray(vertexArray)
-                                    .setPrimitiveType(PrimitiveType.TRIANGLE_STRIP)
-                                    .setCount(4)
-                                    .build(),
-                            new DrawCommand.Builder()
-                                    .setProgram(program)
-                                    .setVertexArray(vertexArray)
-                                    .setPrimitiveType(PrimitiveType.TRIANGLE_STRIP)
-                                    .setCount(4)
-                                    .build(),
-                            new DrawCommand.Builder()
-                                    .setProgram(program)
-                                    .setVertexArray(vertexArray)
-                                    .setPrimitiveType(PrimitiveType.TRIANGLE_STRIP)
-                                    .setCount(4)
-                                    .build(),
-                            new DrawCommand.Builder()
-                                    .setProgram(program)
-                                    .setVertexArray(vertexArray)
-                                    .setPrimitiveType(PrimitiveType.TRIANGLE_STRIP)
-                                    .setCount(4)
-                                    .build(),
-                            new DrawCommand.Builder()
-                                    .setProgram(program)
-                                    .setVertexArray(vertexArray)
-                                    .setPrimitiveType(PrimitiveType.TRIANGLE_STRIP)
-                                    .setCount(4)
-                                    .build())
-                            .collect(Collectors.toList()))
+                    .setDrawElementsCommands(drawElementsCommands)
                     .setArrayBuffer(arrayBuffer)
                     .setElementArrayBuffer(elementArrayBuffer)
                     .build()));
@@ -269,15 +251,15 @@ public class Main {
 
     private static void deleteCubes(final Collection<Crate> crates) {
         crates.stream()
-                .map(Crate::getDrawCommands)
+                .map(Crate::getDrawElementsCommand)
                 .flatMap(Collection::stream)
-                .map(DrawCommand::getProgram)
+                .map(DrawElementsCommand::getProgram)
                 .distinct()
                 .forEach(Program::delete);
         final List<VertexArray> vertexArrays = crates.stream()
-                .map(Crate::getDrawCommands)
+                .map(Crate::getDrawElementsCommand)
                 .flatMap(Collection::stream)
-                .map(DrawCommand::getVertexArray)
+                .map(DrawElementsCommand::getVertexArray)
                 .distinct()
                 .collect(Collectors.toList());
         VertexArray.delete(vertexArrays);

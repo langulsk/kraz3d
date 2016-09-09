@@ -2,7 +2,7 @@ package com.kraz3d.game;
 
 import com.google.common.base.MoreObjects;
 import com.kraz3d.opengl.ArrayBuffer;
-import com.kraz3d.opengl.DrawCommand;
+import com.kraz3d.opengl.DrawElementsCommand;
 import com.kraz3d.opengl.ElementArrayBuffer;
 
 import java.io.Serializable;
@@ -13,20 +13,20 @@ import java.util.Objects;
 
 public class Crate implements Serializable {
 
-    private final Collection<DrawCommand> drawCommands;
+    private final Collection<DrawElementsCommand> drawElementsCommand;
 
     private final ArrayBuffer arrayBuffer;
 
     private final ElementArrayBuffer elementArrayBuffer;
 
     private Crate(final Builder builder) {
-        this.drawCommands = Collections.unmodifiableCollection(new ArrayList<>(builder.drawCommands));
+        this.drawElementsCommand = Collections.unmodifiableCollection(new ArrayList<>(builder.drawElementsCommands));
         this.arrayBuffer = builder.arrayBuffer;
         this.elementArrayBuffer = builder.elementArrayBuffer;
     }
 
-    public Collection<DrawCommand> getDrawCommands() {
-        return this.drawCommands;
+    public Collection<DrawElementsCommand> getDrawElementsCommand() {
+        return this.drawElementsCommand;
     }
 
     public ArrayBuffer getArrayBuffer() {
@@ -74,14 +74,14 @@ public class Crate implements Serializable {
 
     public static class Builder {
 
-        private Collection<DrawCommand> drawCommands;
+        private Collection<DrawElementsCommand> drawElementsCommands;
 
         private ArrayBuffer arrayBuffer;
 
         private ElementArrayBuffer elementArrayBuffer;
 
-        public Builder setDrawCommands(final Collection<DrawCommand> drawCommands) {
-            this.drawCommands = drawCommands;
+        public Builder setDrawElementsCommands(final Collection<DrawElementsCommand> drawElementsCommands) {
+            this.drawElementsCommands = drawElementsCommands;
             return this;
         }
 

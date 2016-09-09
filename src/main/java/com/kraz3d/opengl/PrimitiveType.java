@@ -26,7 +26,7 @@ public enum PrimitiveType implements Serializable {
         this.glPrimitiveType = glPrimitiveType;
     }
 
-    int getGLPrimitiveType() {
+    public int getGLPrimitiveType() {
         return this.glPrimitiveType;
     }
 
