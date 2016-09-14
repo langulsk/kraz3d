@@ -78,7 +78,6 @@ public class Program implements Serializable {
             GL20.glGetProgramInfoLog(this.glProgram, lengthBuffer, infoLogBuffer);
             return MemoryUtil.memUTF8(infoLogBuffer, lengthBuffer.get(0));
         }
-
     }
 
     public List<Attribute> getAttributes() {
