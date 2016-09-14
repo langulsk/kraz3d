@@ -93,10 +93,10 @@ public class Program implements Serializable {
             final List<Attribute> attributes = IntStream.range(0, activeAttributesBuffer.get(0))
                     .mapToObj(index -> {
                         GL20.glGetActiveAttrib(this.glProgram, index, lengthBuffer, sizeBuffer, typeBuffer, nameBuffer);
-                        final String name = MemoryUtil.memUTF8(nameBuffer, lengthBuffer.get(0));
+                        final String name = MemoryUtil.memASCII(nameBuffer, lengthBuffer.get(0));
                         final DataType dataType = DataType.getDataType(typeBuffer.get(0));
                         final int size = sizeBuffer.get(0);
-                        final int location = GL20.glGetAttribLocation(this.glProgram, nameBuffer);
+                        final int location = GL20.glGetAttribLocation(this.glProgram, name);
                         return new Attribute(name, dataType, size, location);
                     })
                     .collect(Collectors.toList());

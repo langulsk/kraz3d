@@ -160,10 +160,18 @@ public class Main {
         final Shader vertexShader = Shader.create(ShaderType.VERTEX_SHADER);
         vertexShader.source(CrateResource.getVertexShaderSource());
         vertexShader.compile();
+        if (!vertexShader.getCompileStatus()) {
+            final String infoLog = vertexShader.getInfoLog();
+            Log.error(infoLog);
+        }
 
         final Shader fragmentShader = Shader.create(ShaderType.FRAGMENT_SHADER);
         fragmentShader.source(CrateResource.getFragmentShaderSource());
         fragmentShader.compile();
+        if (!vertexShader.getCompileStatus()) {
+            final String infoLog = fragmentShader.getInfoLog();
+            Log.error(infoLog);
+        }
 
         final Program program = Program.create();
         program.attach(vertexShader);
