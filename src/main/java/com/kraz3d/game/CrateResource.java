@@ -85,12 +85,12 @@ public class CrateResource {
     }
 
     public static String getVertexShaderSource() {
-        final String fileName = "crate_vs.glsl";
+        final String fileName = "crate.vert";
         return getFileContent(fileName);
     }
 
     public static String getFragmentShaderSource() {
-        return getFileContent("crate_fs.glsl");
+        return getFileContent("crate.frag");
     }
 
     private static String getFileContent(String fileName) {
